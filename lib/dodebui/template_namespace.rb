@@ -1,4 +1,5 @@
 module Dodebui
+  # namespace for evaluationg templates
   class TemplateNamespace
     def initialize(hash)
       hash.each do |key, value|
@@ -6,7 +7,7 @@ module Dodebui
       end
     end
 
-    def get_binding
+    def priv_binding
       binding
     end
   end

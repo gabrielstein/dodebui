@@ -4,32 +4,31 @@ require 'logger'
 require 'docker'
 
 module Dodebui
+  ## commandline interface for dodebui
   class Cli
     attr_accessor :source_templates, :build_distributions
     attr_reader :wd
 
     def self.logger
-      @@logger ||= Logger.new(STDOUT)
+      @logger ||= Logger.new(STDOUT)
     end
 
     def initialize
-      @dodebuifiles ||= [ 'Dodebuifile' ]
+      @dodebuifiles ||= ['Dodebuifile']
       @original_dir = Dir.getwd
     end
 
-    def have_dodebuifile
+    def dodebuifile?
       @dodebuifiles.each do |fn|
-        if File.exist?(fn)
-          return fn
-        end
+        return fn if File.exist?(fn)
       end
-      return nil
+      nil
     end
 
     def find_dodebuifile_location # :nodoc:
       here = Dir.pwd
-      until (fn = have_dodebuifile)
-        Dir.chdir("..")
+      until (fn = dodebuifile?)
+        Dir.chdir('..')
         return nil if Dir.pwd == here
         here = Dir.pwd
       end
@@ -38,12 +37,9 @@ module Dodebui
       Dir.chdir(@original_dir)
     end
 
-
     def load_dodebiufile
       dodebuifile, location = find_dodebuifile_location
-      if dodebuifile.nil?
-        fail "No Dodebuifile found"
-      end
+      fail 'No Dodebuifile found' if dodebuifile.nil?
       @dodebuifile = File.join(location, dodebuifile)
       @wd = location
       Cli.logger.info("Working directory #{@wd}")
@@ -54,7 +50,7 @@ module Dodebui
     def load_dodebiufile_raw(path)
       File.open(path, 'r') do |infile|
         code = infile.read
-        eval(code)
+        eval(code) # rubocop:disable Lint/Eval
       end
     end
 
@@ -71,25 +67,20 @@ module Dodebui
 
       build
     end
+
     def test_docker
       Docker.options[:read_timeout] = 3600
       data = Docker.version
-      Cli.logger.info("Connecting to Docker server successful (version #{data['Version']})")
-
+      Cli.logger.info(
+        "Connecting to Docker server successful (version #{data['Version']})"
+      )
     end
 
     def logger
       Cli.logger
     end
 
-    def prepare_distributions(distributions=[])
-      if distributions == []
-        DISTRIBUTIONS.each do |os, value|
-          value.each do |codename|
-            distributions += ["#{os}:#{codename}"]
-          end
-        end
-      end
+    def prepare_distributions(distributions = [])
       @distributions = distributions.map do |name|
         Distribution.new(name, self)
       end
@@ -106,7 +97,7 @@ module Dodebui
       end
 
       # wait for all threads
-      threads.each { |thr| thr.join }
+      threads.each(&:join)
     end
 
     def prepare_sources
@@ -114,7 +105,7 @@ module Dodebui
         dist.build.source
       end
     end
-    
+
     def build
       threads = []
       @distributions.each do |dist|
@@ -123,7 +114,7 @@ module Dodebui
         end
       end
       # wait for all threads
-      threads.each { |thr| thr.join }
+      threads.each(&:join)
     end
   end
 end

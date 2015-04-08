@@ -1,5 +1,4 @@
-require "dodebui/version"
-
+require 'dodebui/version'
+# rubocop:disable Style/AvoidFor
 module Dodebui
-  # Your code goes here...
 end

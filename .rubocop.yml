@@ -1,0 +1,4 @@
+Metrics/ClassLength:
+  Max: 180
+Metrics/MethodLength:
+  Max: 20
