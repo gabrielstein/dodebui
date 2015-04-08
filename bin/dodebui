@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'dodebui/cli'
+Dodebui::Cli.new.run
