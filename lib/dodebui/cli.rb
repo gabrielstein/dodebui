@@ -6,7 +6,7 @@ require 'docker'
 module Dodebui
   ## commandline interface for dodebui
   class Cli
-    attr_accessor :source_templates, :build_distributions
+    attr_accessor :source_templates, :build_distributions, :apt_proxy
     attr_reader :wd
 
     def self.logger

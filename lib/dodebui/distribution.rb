@@ -90,9 +90,23 @@ module Dodebui
       '/usr/lib/pbuilder'
     end
 
+    def apt_proxy
+      (
+        'echo ' \
+        '"Acquire::http::Proxy ' \
+        '\"%s\";" ' \
+        '> ' \
+        '/etc/apt/apt.conf.d/01proxy'
+      ) % @cli.apt_proxy
+    end
+
     def create_image_dockerfile_contents
-      dockerfile = (
-        "FROM #{base_image_name}\n" \
+      dockerfile = "FROM #{base_image_name}\n"
+
+      # append proxy if needed
+      dockerfile += "RUN #{apt_proxy}\n" unless @cli.apt_proxy.nil?
+
+      dockerfile += (
         "ENV DEBIAN_FRONTEND=noninteractive\n" \
         "RUN apt-get update && \\ \n" \
         "    apt-get -y dist-upgrade && \\ \n" \

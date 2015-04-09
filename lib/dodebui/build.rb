@@ -46,7 +46,6 @@ module Dodebui
       )
       logger.info("Starting container #{@distribution.codename}")
       @container.start('Binds' => [
-        "#{File.join(cache_dir, 'archives')}:/var/cache/apt/archives",
         "#{build_dir}:/_build"
       ])
     end
@@ -77,8 +76,24 @@ module Dodebui
       logger.info("Finished building package #{@distribution.codename}")
     end
 
+    def build_apt_proxy
+      return if @cli.apt_proxy.nil?
+      logger.info("Setting apt_proxy #{@distribution.codename}")
+      stdout, stderr, ret_val = @container.exec([
+        'bash',
+        '-c',
+        @distribution.apt_proxy
+      ])
+      write_log('apt_proxy', stdout, stderr)
+      logger.warn(
+        "Failed setting apt proxy #{@distribution.codename}"
+      ) if ret_val != 0
+    end
+
     def build
       build_container_create_start
+
+      build_apt_proxy
 
       build_dependencies
 
