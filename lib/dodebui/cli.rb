@@ -16,6 +16,7 @@ module Dodebui
     def initialize
       @dodebuifiles ||= ['Dodebuifile']
       @original_dir = Dir.getwd
+      @distributions_sem = Mutex.new
     end
 
     def dodebuifile?
@@ -92,10 +93,18 @@ module Dodebui
       threads = []
       @distributions.each do |dist|
         threads << Thread.new do
-          dist.ensure_image_updated
+          begin
+            dist.ensure_image_updated
+          rescue => e
+            logger.warn(
+              "Failed ensuring a updated image '#{dist.image_name}': #{e}"
+            )
+            @distributions_sem.synchronize do
+              @distributions -= [dist]
+            end
+          end
         end
       end
-
       # wait for all threads
       threads.each(&:join)
     end
@@ -110,7 +119,14 @@ module Dodebui
       threads = []
       @distributions.each do |dist|
         threads << Thread.new do
-          dist.build.build
+          begin
+            dist.build.build
+          rescue => e
+            logger.warn("Failed building on image '#{dist.image_name}': #{e}")
+            @distributions_sem.synchronize do
+              @distributions -= [dist]
+            end
+          end
         end
       end
       # wait for all threads

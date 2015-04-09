@@ -90,6 +90,15 @@ module Dodebui
       ) if ret_val != 0
     end
 
+
+    def build_error(e)
+      logger.warn("Error building #{@distribution.image_name}: #{e}")
+      return false if @container.nil?
+      logger.warn("Use container id=#{@container.id} to debug")
+      @container.stop
+      false
+    end
+
     def build
       build_container_create_start
 
@@ -101,9 +110,11 @@ module Dodebui
 
       @container.stop
 
+      @container.remove
+
       true
-    rescue RuntimeError
-      false
+    rescue RuntimeError => e
+      build_error(e)
     end
 
     def cache_dir
@@ -159,6 +170,7 @@ module Dodebui
     end
 
     def source_templates
+      return if @cli.source_templates.nil?
       @cli.source_templates.each do |template|
         src = File.join(source_dir, template)
         dest = src[0...-4]
