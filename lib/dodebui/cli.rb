@@ -55,6 +55,15 @@ module Dodebui
       end
     end
 
+    def check_outcome
+      return if @distributions.length == build_distributions.length
+      logger.error(
+        "Only built #{@distributions.length} out of " \
+        "#{build_distributions.length}"
+      )
+      exit 1
+    end
+
     def run
       Cli.logger.info("Initializing dodebui #{VERSION}")
 
@@ -67,6 +76,8 @@ module Dodebui
       prepare_sources
 
       build
+
+      check_outcome
     end
 
     def test_docker
