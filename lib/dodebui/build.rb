@@ -90,6 +90,24 @@ module Dodebui
       ) if ret_val != 0
     end
 
+    def build_chown
+      uid = Process.uid
+      gid = Process.gid
+      logger.info(
+        'Changing owner of build dir to' \
+        " uid=#{uid} gid=#{gid} #{@distribution.codename}"
+      )
+      stdout, stderr, ret_val = @container.exec([
+        'chown',
+        '-R',
+        format('%d:%d', uid, gid),
+        '/_build'
+      ])
+      write_log('chown', stdout, stderr)
+      logger.warn(
+        "Failed changing owner of build dir #{@distribution.codename}"
+      ) if ret_val != 0
+    end
 
     def build_error(e)
       logger.warn("Error building #{@distribution.image_name}: #{e}")
@@ -107,6 +125,8 @@ module Dodebui
       build_dependencies
 
       build_package
+
+      build_chown
 
       @container.stop
 
